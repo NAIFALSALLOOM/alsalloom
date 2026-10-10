@@ -19,12 +19,16 @@
    phone's storage, and never sends anything anywhere. The tester registers like a real member; the admin's approval
    is simulated a few seconds later, so the members' portal opens exactly as it will in the real app. */
 (function(){
-  var KEY='alsalloom-app-store-v1',UIDK='alsalloom-app-uid';
+  var KEY='alsalloom-app-store-v1',UIDK='alsalloom-app-uid',OUTK='alsalloom-app-out',GUESTK='alsalloom-app-guest';
   var store=null,uid=null,subs=[],saveT=null;
+  var ls={get:function(k){try{return localStorage.getItem(k)}catch(e){return null}},set:function(k,v){try{localStorage.setItem(k,v)}catch(e){}},del:function(k){try{localStorage.removeItem(k)}catch(e){}}};
+  var newId=function(){return'u'+Math.random().toString(36).slice(2,10)};
   try{store=JSON.parse(localStorage.getItem(KEY))}catch(e){store=null}
   if(!store||typeof store!=='object'){store=JSON.parse(JSON.stringify(window.__SEED||{}))}
-  try{uid=localStorage.getItem(UIDK)}catch(e){}
-  if(!uid){uid='u'+Math.random().toString(36).slice(2,10);try{localStorage.setItem(UIDK,uid)}catch(e){}}
+  /* signed out: the phone acts as a visitor until the member signs in again with his number, or registers anew */
+  var signedOut=ls.get(OUTK)==='1';
+  if(signedOut){uid=ls.get(GUESTK);if(!uid){uid=newId();ls.set(GUESTK,uid)}}
+  else{uid=ls.get(UIDK);if(!uid){uid=newId();ls.set(UIDK,uid)}}
   function persist(){clearTimeout(saveT);saveT=setTimeout(function(){try{localStorage.setItem(KEY,JSON.stringify(store))}catch(e){}},150)}
   function emit(){persist();subs.slice().forEach(function(f){try{f()}catch(e){}})}
   function colSnap(path,ob,dir){
@@ -49,8 +53,16 @@
       if(key&&(reg.mobile||reg.email||reg.city||reg.job))store['contacts/'+key]={mobile:reg.mobile||'',email:reg.email||'',city:reg.city||'',job:reg.job||'',by:'admin',o:true,ts:t};
       if(key&&reg.born)store['bios/'+key]={text:(store['bios/'+key]||{}).text||'',born:reg.born,by:'admin',o:true,ts:t};
       store['log/x'+t.toString(36)]={act:'approve',by:'admin',o:true,who:uid,text:'',ts:t};
+      if(signedOut){ls.set(UIDK,uid);ls.del(OUTK);ls.del(GUESTK);signedOut=false}
       emit();window.dispatchEvent(new CustomEvent('trial-approved'))},3200)}
-  window.__TRIAL={store:store,uid:uid,emit:emit,reset:function(){try{localStorage.removeItem(KEY);localStorage.removeItem(UIDK)}catch(e){}}};
+  var last9=function(v){return String(v||'').replace(/[٠-٩]/g,function(d){return'٠١٢٣٤٥٦٧٨٩'.indexOf(d)}).replace(/\D/g,'').slice(-9)};
+  window.__TRIAL={store:store,uid:uid,emit:emit,signedOut:function(){return signedOut},
+    signOut:function(){ls.set(OUTK,'1');ls.del(GUESTK)},
+    /* signing in: the registered member on this phone whose number matches; the code is not checked in the trial */
+    findByPhone:function(phone){var n=last9(phone);if(n.length<9)return null;
+      var ids=Object.keys(store).filter(function(k){return k.indexOf('regs/')===0&&last9(store[k].mobile)===n}).map(function(k){return k.slice(5)})
+        .filter(function(id){return(store['approvals/'+id]||{}).status==='approved'});return ids[0]||null},
+    signIn:function(id){ls.set(UIDK,id);ls.del(OUTK);ls.del(GUESTK)}};
   window.familyStore={use:async function(n){
     if(n==='user')return{id:async function(){return uid},isOwner:async function(){return false},can:async function(){return true}};
     if(n==='db')return{doc:mdoc,collection:function(p){return mcol(p)}};
@@ -2499,6 +2511,9 @@ body.cx-open #push{z-index:40}
 #np .st.on{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
 #np .row{gap:.5rem}
 #np ol{margin:0;padding-inline-start:1.3rem;display:grid;gap:.35rem}
+#so{display:grid;justify-items:center;gap:.35rem;margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid var(--line);text-align:center}
+.si{border:1px solid var(--line);padding:.9rem;display:grid;gap:.6rem;border-radius:var(--r);background:var(--bg)}
+.si .err{min-height:1.2em}
 @media (prefers-reduced-motion: reduce){#cx-chat,#cx-chat.open{transition:none}.cx-typing i,.cx-rec .dot{animation:none}}
 </style>
 <script>
@@ -2574,7 +2589,7 @@ function after(){if(!inside())return;
   const h=q('#tab-msgs .p-head h2');if(h)h.textContent='الدردشة';
   if(S.tab==='msgs'){drawList();if(PENDING){const id=PENDING;PENDING=null;setTimeout(()=>openChat(id),30)}}
   if(S.tab==='notif')notifPanel();
-  badges();scheduleReminder()}
+  signOutRow();badges();scheduleReminder()}
 const _rn=renderNow;renderNow=function(){_rn.apply(this,arguments);try{after()}catch(e){console.error(e)}};
 
 /* ---------- a conversation ---------- */
@@ -2710,6 +2725,28 @@ document.addEventListener('click',e=>{const a=e.target.closest('a[href^="tel:"],
   const d=(a.getAttribute('href')||'').replace(/\D/g,'');if(a.href.startsWith('mailto:')?false:d.length<9){e.preventDefault();say('الأرقام مخفية في النسخة التجريبية')}},true);
 addEventListener('trial-approved',()=>{say('وافق المشرف على طلبك، حياك الله في بوابة العائلة');setTimeout(()=>{if(inside()&&!granted())say('فعّل إشعارات الجوال من «الإشعارات»')},4200)});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&OPEN){const c=chatOf(OPEN);if(c&&c.unread){c.unread=0;save();drawList();badges()}}});
+/* ---------- signing out, and back in with the phone number ---------- */
+function signOutRow(){if(S.tab!=='home'||q('#so'))return;const h=q('#tab-home');if(!h)return;const d=document.createElement('div');d.id='so';
+  d.innerHTML='<button type="button" class="btn ghost" id="so-btn">تسجيل الخروج</button><p class="hint">يرجعك للموقع العام، وترجع للبوابة برقم جوالك.</p>';h.appendChild(d);
+  q('#so-btn').onclick=e=>{const b=e.currentTarget;if(!b.dataset.sure){b.dataset.sure='1';b.textContent='متأكد؟ اضغط مرة ثانية';setTimeout(()=>{if(b.isConnected){delete b.dataset.sure;b.textContent='تسجيل الخروج'}},4000);return}
+    __TRIAL.signOut();try{sessionStorage.setItem('trial-msg','out')}catch(x){}history.replaceState(null,'',location.pathname+'#home');location.reload()}}
+(function signIn(){const host=q('#st-new');if(!host)return;const d=document.createElement('div');d.className='si';
+  d.innerHTML=`<b>عندك حساب في البوابة؟</b><button type="button" class="btn ghost" id="si-open">سجّل دخولك برقم جوالك</button>
+  <form class="grid" id="si-form" novalidate hidden><label class="full"><span>رقم الجوال</span><input id="si-phone" type="tel" inputmode="tel" maxlength="16" placeholder="05xxxxxxxx" dir="ltr" autocomplete="tel"></label>
+    <label class="full" id="si-code-row" hidden><span>رمز التحقق</span><input id="si-code" inputmode="numeric" maxlength="4" autocomplete="one-time-code" dir="ltr"></label>
+    <p class="hint full" id="si-hint" hidden>في النسخة التجريبية ما يوصلك رمز، اكتب أي أربعة أرقام.</p>
+    <p class="err full" id="si-err" role="alert"></p><button class="btn full" type="submit" id="si-go">أرسل الرمز</button></form>
+  <p class="hint">أول مرة تدخل؟ عبّ طلب التسجيل تحت.</p>`;
+  const n=host.querySelector('.trialnote')||host.querySelector('h3');n.after(d);let found=null;
+  q('#si-open').onclick=()=>{q('#si-open').hidden=true;q('#si-form').hidden=false;q('#si-phone').focus()};
+  q('#si-form').addEventListener('submit',e=>{e.preventDefault();const err=q('#si-err');
+    if(!found){found=__TRIAL.findByPhone(q('#si-phone').value);if(!found){err.textContent='ما لقينا حساب بهالرقم. إذا أول مرة تدخل، عبّ طلب التسجيل تحت.';return}
+      err.textContent='';q('#si-phone').readOnly=true;q('#si-code-row').hidden=false;q('#si-hint').hidden=false;q('#si-go').textContent='دخول';q('#si-code').focus();return}
+    const c=q('#si-code').value.replace(/[٠-٩]/g,x=>'٠١٢٣٤٥٦٧٨٩'.indexOf(x)).replace(/\D/g,'');if(c.length!==4){err.textContent='اكتب الرمز من أربعة أرقام';return}
+    __TRIAL.signIn(found);try{sessionStorage.setItem('trial-msg','in')}catch(x){}history.replaceState(null,'',location.pathname+'#members');location.reload()})})();
+(function(){let m=null;try{m=sessionStorage.getItem('trial-msg');sessionStorage.removeItem('trial-msg')}catch(e){}
+  if(m){try{history.scrollRestoration='manual'}catch(e){}scrollTo(0,0)}
+  if(m)setTimeout(()=>say(m==='out'?'سجّلت خروجك. ترجع للبوابة من «دخول أفراد العائلة»':'حياك الله، سجّلت دخولك'),600)})();
 window.__CX={open:openChat,close:closeChat,state:()=>C,reset:()=>{try{localStorage.removeItem(SKEY)}catch(e){}}};
 })();
 </script>
