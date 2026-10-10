@@ -1,0 +1,868 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+<title>آل سلوم</title>
+<meta name="description" content="تطبيق عائلة السلوم: دردشة ومناسبات وإشعارات لأفراد العائلة. نسخة تجريبية.">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e0e0d" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="آل سلوم">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap">
+<style>
+/* Alsalloom family app, trial build. The look follows the family site's default: black and white, hairlines,
+   Amiri for the family name and titles, IBM Plex Sans Arabic for everything you read and press.
+   Layout: one phone-width column; on a computer it sits in the middle of the screen. */
+:root{
+  --bg:#ffffff; --surface:#f6f6f4; --soft:#ececea; --line:#e3e3df; --rule:#cfcfcb;
+  --ink:#0b0b0b; --ink-2:#4a4a48; --muted:#6b6b68;
+  --mine:#0b0b0b; --mine-ink:#ffffff; --mine-sub:rgba(255,255,255,.62);
+  --theirs:#f1f1ee; --theirs-ink:#0b0b0b;
+  --danger:#b3261e; --scrim:rgba(0,0,0,.45); --banner:rgba(250,250,248,.97);
+  --shadow:0 10px 30px rgba(0,0,0,.14),0 2px 6px rgba(0,0,0,.08);
+  --display:"Amiri","Noto Naskh Arabic",serif;
+  --ui:"IBM Plex Sans Arabic","Segoe UI",Tahoma,system-ui,sans-serif;
+  --fs:1rem; --vh:100dvh;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e0e0d; --surface:#161615; --soft:#232321; --line:#2b2b29; --rule:#3d3d3a;
+    --ink:#f3f3f0; --ink-2:#c6c6c1; --muted:#9a9a95;
+    --mine:#f3f3f0; --mine-ink:#0b0b0b; --mine-sub:rgba(11,11,11,.6);
+    --theirs:#1f1f1d; --theirs-ink:#f3f3f0;
+    --danger:#ff8a80; --scrim:rgba(0,0,0,.6); --banner:rgba(32,32,30,.97);
+    --shadow:0 10px 30px rgba(0,0,0,.5),0 2px 6px rgba(0,0,0,.4);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e0e0d; --surface:#161615; --soft:#232321; --line:#2b2b29; --rule:#3d3d3a;
+  --ink:#f3f3f0; --ink-2:#c6c6c1; --muted:#9a9a95;
+  --mine:#f3f3f0; --mine-ink:#0b0b0b; --mine-sub:rgba(11,11,11,.6);
+  --theirs:#1f1f1d; --theirs-ink:#f3f3f0;
+  --danger:#ff8a80; --scrim:rgba(0,0,0,.6); --banner:rgba(32,32,30,.97);
+  --shadow:0 10px 30px rgba(0,0,0,.5),0 2px 6px rgba(0,0,0,.4);
+  color-scheme:dark;
+}
+:root[data-fs="1"]{font-size:112.5%}
+:root[data-fs="2"]{font-size:125%}
+
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--surface);color:var(--ink);font-family:var(--ui);font-size:1rem;line-height:1.6;-webkit-font-smoothing:antialiased;overscroll-behavior:none}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+[hidden]{display:none!important}
+h1,h2,h3,p{margin:0}
+.ic{width:24px;height:24px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* the app column */
+#app{position:relative;max-width:30rem;height:var(--vh);margin-inline:auto;background:var(--bg);overflow:hidden;overflow:clip;display:flex;flex-direction:column}
+@media (min-width:34rem){#app{border-inline:1px solid var(--line)}}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg)}
+
+/* ---------- getting started ---------- */
+.start{padding:calc(env(safe-area-inset-top,0px) + 2rem) 1.5rem calc(env(safe-area-inset-bottom,0px) + 1.5rem);overflow-y:auto;gap:1.25rem}
+.start .top{display:flex;justify-content:space-between;align-items:center;min-height:2.75rem}
+.brandmark{font-family:var(--display);font-weight:700;font-size:1.35rem}
+.trial{font-size:.78rem;font-weight:500;border:1px solid var(--rule);padding:.05rem .55rem;color:var(--ink-2);white-space:nowrap}
+.hero{flex:1;display:grid;align-content:center;justify-items:center;text-align:center;gap:.9rem;padding-block:2rem}
+.hero h1{font-family:var(--display);font-weight:700;font-size:clamp(4rem,22vw,6rem);line-height:1.2}
+.orn{display:flex;align-items:center;gap:.8rem}
+.orn i{display:block;width:3.5rem;border-top:1px solid var(--ink)}
+.orn b{display:block;width:.45rem;height:.45rem;background:var(--ink);transform:rotate(45deg)}
+.hero .origin{font-family:var(--display);font-size:1.45rem}
+.hero .lede{color:var(--muted);max-width:20rem}
+.step h2{font-family:var(--display);font-weight:700;font-size:2rem;line-height:1.3}
+.step p.muted{color:var(--muted)}
+.step form{display:grid;gap:1rem;margin-top:.5rem}
+label.f{display:grid;gap:.35rem;font-weight:500}
+.field{display:flex;align-items:center;border:1px solid var(--rule);background:var(--bg);min-height:3.25rem}
+.field:focus-within{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.field input{flex:1;min-width:0;width:100%;border:0;background:none;padding:.75rem .9rem;font-size:1.15rem;outline:none}
+.step form>*,.sheet form>*,label.f>*{min-width:0}
+.muted{color:var(--muted)}
+.field .cc{padding-inline:.9rem;color:var(--muted);border-inline-start:1px solid var(--line);direction:ltr;font-variant-numeric:tabular-nums}
+.err{color:var(--danger);font-size:.9rem;min-height:1.4em}
+.otp{display:flex;gap:.6rem;direction:ltr;justify-content:center}
+.otp input{width:3.4rem;height:3.9rem;text-align:center;font-size:1.6rem;font-variant-numeric:tabular-nums;border:1px solid var(--rule);background:var(--bg);outline:none}
+.otp input:focus{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;min-height:3.25rem;padding:.6rem 1.4rem;border:1px solid var(--ink);background:var(--ink);color:var(--bg);font-weight:600;font-size:1.02rem}
+.btn.ghost{background:none;color:var(--ink)}
+.btn.wide{width:100%}
+.btn.sm{min-height:2.5rem;padding:.3rem .9rem;font-size:.92rem;font-weight:500}
+.btn:disabled{opacity:.45;cursor:default}
+.btn:not(:disabled):active{transform:translateY(1px)}
+.note{border-inline-start:3px solid var(--ink);padding-inline-start:.75rem;color:var(--muted);font-size:.92rem}
+.link{border:0;background:none;padding:.3rem 0;text-decoration:underline;text-underline-offset:.3em;text-decoration-color:var(--rule);color:var(--ink-2)}
+.demo-banner{border:1px solid var(--line);background:var(--surface);padding:.9rem;display:grid;grid-template-columns:auto 1fr;gap:.2rem .8rem;align-items:center;box-shadow:var(--shadow);border-radius:14px;margin-block:.5rem}
+
+/* ---------- main frame: top bar, list, bottom tabs ---------- */
+.bar{display:flex;align-items:center;gap:.5rem;padding:calc(env(safe-area-inset-top,0px) + .6rem) 1rem .6rem;border-bottom:1px solid var(--line);background:var(--bg);min-height:3.75rem;flex:none}
+.bar h1{font-family:var(--display);font-weight:700;font-size:1.7rem;line-height:1.3;flex:1;min-width:0}
+.iconbtn{display:inline-grid;place-items:center;width:2.75rem;height:2.75rem;border:0;background:none;border-radius:50%;flex:none;position:relative}
+.iconbtn:active{background:var(--soft)}
+.pane{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);background:var(--bg);padding-bottom:env(safe-area-inset-bottom,0px);flex:none}
+.tabs button{display:grid;justify-items:center;gap:.1rem;border:0;background:none;padding:.5rem 0 .45rem;font-size:.78rem;color:var(--muted);position:relative;min-height:3.6rem}
+.tabs button[aria-selected="true"]{color:var(--ink);font-weight:600}
+.tabs button[aria-selected="true"] .ic{stroke-width:2.2}
+.tabs .dot{position:absolute;top:.35rem;inset-inline-start:calc(50% + .45rem);min-width:1.15rem;height:1.15rem;padding:0 .3rem;border-radius:999px;background:var(--ink);color:var(--bg);font-size:.7rem;font-weight:600;line-height:1.15rem;text-align:center;font-variant-numeric:tabular-nums}
+.search{margin:.75rem 1rem .25rem;display:flex;align-items:center;gap:.4rem;background:var(--surface);border:1px solid var(--line);padding-inline:.7rem;min-height:2.75rem}
+.search input{flex:1;min-width:0;border:0;background:none;outline:none;padding:.45rem 0}
+.search .ic{width:20px;height:20px;color:var(--muted)}
+.pill-row{display:flex;justify-content:center;padding:.4rem 1rem .2rem}
+.empty{color:var(--muted);text-align:center;padding:3rem 1.5rem}
+
+/* chat list */
+.rows{list-style:none;margin:0;padding:0}
+.crow{display:flex;align-items:center;gap:.85rem;width:100%;border:0;background:none;padding:.75rem 1rem;text-align:start}
+.crow:active{background:var(--surface)}
+.crow .mid{flex:1;min-width:0;display:grid;gap:.05rem;border-bottom:1px solid var(--line);padding-bottom:.75rem;margin-bottom:-.75rem}
+.crow .l1,.crow .l2{display:flex;align-items:center;gap:.5rem;min-width:0}
+.crow b{font-weight:600;font-size:1.05rem;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.crow time{font-size:.78rem;color:var(--muted);font-variant-numeric:tabular-nums;flex:none}
+.crow .last{flex:1;min-width:0;color:var(--muted);font-size:.93rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:.25rem}
+.crow.unread time{color:var(--ink);font-weight:600}
+.crow.unread .last{color:var(--ink-2)}
+.count{min-width:1.35rem;height:1.35rem;padding:0 .35rem;border-radius:999px;background:var(--ink);color:var(--bg);font-size:.75rem;font-weight:600;line-height:1.35rem;text-align:center;font-variant-numeric:tabular-nums;flex:none}
+.pin{width:16px;height:16px;color:var(--muted)}
+.av{width:3.1rem;height:3.1rem;border-radius:50%;display:grid;place-items:center;flex:none;background:var(--soft);color:var(--ink);font-family:var(--display);font-weight:700;font-size:1.45rem;line-height:1;overflow:hidden}
+.av.sm{width:2.4rem;height:2.4rem;font-size:1.15rem}
+.av.lg{width:5rem;height:5rem;font-size:2.4rem}
+.av.ink{background:var(--ink);color:var(--bg)}
+.av .ic{width:22px;height:22px}
+.fab{position:absolute;inset-inline-start:auto;inset-inline-end:1rem;bottom:calc(env(safe-area-inset-bottom,0px) + 4.6rem);width:3.5rem;height:3.5rem;border-radius:50%;border:0;background:var(--ink);color:var(--bg);display:grid;place-items:center;box-shadow:var(--shadow);z-index:2}
+
+/* ---------- a conversation ---------- */
+#chat{z-index:5;transform:translateX(-100%);transition:transform .26s cubic-bezier(.2,.8,.2,1);visibility:hidden}
+#chat.open{transform:none;visibility:visible}
+.chead{gap:.25rem;padding-inline:.25rem .75rem}
+.chead .who{flex:1;min-width:0;display:flex;align-items:center;gap:.65rem;border:0;background:none;padding:.2rem;text-align:start}
+.chead .who div{min-width:0;display:grid}
+.chead .who b{font-weight:600;font-size:1.05rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chead .who span{font-size:.8rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.msgs{flex:1;overflow-y:auto;padding:.75rem .75rem 1rem;display:flex;flex-direction:column;gap:.3rem;background:var(--bg);overscroll-behavior:contain}
+.day{align-self:center;font-size:.78rem;color:var(--muted);background:var(--surface);border:1px solid var(--line);padding:.05rem .7rem;margin-block:.6rem .3rem}
+.sysmsg{align-self:center;max-width:85%;text-align:center;font-size:.85rem;color:var(--muted);padding:.2rem .5rem;margin-block:.2rem}
+.m{max-width:82%;display:grid;gap:.1rem;position:relative}
+.m.me{align-self:flex-end}
+.m.them{align-self:flex-start}
+.m + .m.them.cont,.m + .m.me.cont{margin-top:-.15rem}
+.bub{padding:.45rem .7rem .3rem;border-radius:16px;background:var(--theirs);color:var(--theirs-ink);overflow-wrap:anywhere;user-select:text;-webkit-user-select:text}
+.bub .tx{white-space:pre-wrap}
+.me .bub{background:var(--mine);color:var(--mine-ink);border-end-end-radius:5px}
+.them .bub{border-end-start-radius:5px}
+.cont.me .bub{border-end-end-radius:16px;border-start-end-radius:5px}
+.cont.them .bub{border-end-start-radius:16px;border-start-start-radius:5px}
+.bub .from{display:block;font-size:.8rem;font-weight:600;margin-bottom:.05rem;color:var(--ink-2)}
+.meta{display:flex;justify-content:flex-end;align-items:center;gap:.25rem;font-size:.7rem;color:var(--muted);margin-top:.1rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.me .meta{color:var(--mine-sub)}
+.tick{width:16px;height:16px;stroke-width:2}
+.tick.read{stroke-width:2.4}
+.me .tick.read{stroke:var(--mine-ink)}
+.crow .tick{width:17px;height:17px}
+.crow .tick.read{stroke:var(--ink)}
+.bub img{display:block;max-width:100%;max-height:18rem;border-radius:11px;margin:.1rem 0 .25rem;cursor:zoom-in}
+.quote{border-inline-start:3px solid currentColor;padding:.15rem .5rem;margin:.1rem 0 .3rem;font-size:.85rem;opacity:.8;background:rgba(127,127,127,.12);border-radius:6px}
+.quote b{display:block;font-size:.78rem}
+.voice{display:flex;align-items:center;gap:.6rem;min-width:12rem;padding-block:.15rem}
+.voice button{width:2.4rem;height:2.4rem;border-radius:50%;border:0;display:grid;place-items:center;background:currentColor;flex:none}
+.voice button .ic{stroke:var(--theirs)}
+.me .voice button .ic{stroke:var(--mine)}
+.voice .wave{flex:1;height:1.6rem;display:flex;align-items:center;gap:2px}
+.voice .wave i{flex:1;background:currentColor;opacity:.35;border-radius:2px}
+.voice .wave i.on{opacity:1}
+.voice small{font-variant-numeric:tabular-nums;font-size:.75rem;opacity:.75}
+.evcard{display:grid;gap:.35rem;min-width:14rem;padding-block:.2rem}
+.evcard .k{font-size:.75rem;font-weight:600;opacity:.75}
+.evcard h3{font-family:var(--display);font-size:1.3rem;font-weight:700;line-height:1.35}
+.evcard p{font-size:.9rem;opacity:.85}
+.evcard .row{display:flex;gap:.4rem;margin-top:.2rem}
+.evcard .row button{flex:1;min-height:2.4rem;border:1px solid currentColor;background:none;color:inherit;font-weight:600;font-size:.88rem}
+.evcard .row button[aria-pressed="true"]{background:currentColor}
+.me .evcard .row button[aria-pressed="true"] span{color:var(--mine)}
+.them .evcard .row button[aria-pressed="true"] span{color:var(--theirs)}
+.typing{align-self:flex-start;background:var(--theirs);border-radius:16px;border-end-start-radius:5px;padding:.7rem .85rem;display:flex;gap:.3rem}
+.typing i{width:.45rem;height:.45rem;border-radius:50%;background:var(--muted);animation:blink 1.2s infinite}
+.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
+.compose{display:flex;align-items:flex-end;gap:.4rem;padding:.5rem .6rem calc(env(safe-area-inset-bottom,0px) + .5rem);border-top:1px solid var(--line);background:var(--bg);flex:none}
+.compose .box{flex:1;min-width:0;display:flex;align-items:flex-end;background:var(--surface);border:1px solid var(--line);border-radius:22px;padding-inline:.3rem .9rem}
+.compose textarea{flex:1;min-width:0;border:0;background:none;outline:none;resize:none;padding:.6rem 0;max-height:8rem;line-height:1.5;font-size:1.02rem}
+.send{width:2.9rem;height:2.9rem;border-radius:50%;border:0;background:var(--ink);color:var(--bg);display:grid;place-items:center;flex:none}
+.replybar{display:flex;align-items:center;gap:.5rem;padding:.45rem .8rem;border-top:1px solid var(--line);background:var(--surface);flex:none}
+.replybar div{flex:1;min-width:0;border-inline-start:3px solid var(--ink);padding-inline-start:.55rem;font-size:.88rem}
+.replybar b{display:block;font-size:.8rem}
+.replybar span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}
+.rec{display:flex;align-items:center;gap:.6rem;flex:1;min-width:0;padding-inline:.8rem;min-height:2.9rem;border:1px solid var(--line);border-radius:22px;background:var(--surface)}
+.rec .redot{width:.7rem;height:.7rem;border-radius:50%;background:var(--danger);animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.25}}
+.rec time{font-variant-numeric:tabular-nums;flex:1}
+.actions{position:absolute;z-index:8;background:var(--bg);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:12px;display:flex;overflow:hidden}
+.actions button{border:0;background:none;padding:.6rem .9rem;display:flex;align-items:center;gap:.35rem;font-size:.9rem}
+.actions button + button{border-inline-start:1px solid var(--line)}
+
+/* ---------- events, alerts, me ---------- */
+.sec{padding:1rem;display:grid;gap:.9rem}
+.sec h2{font-family:var(--display);font-weight:700;font-size:1.5rem;line-height:1.3}
+.ev{border:1px solid var(--line);background:var(--bg);display:grid;grid-template-columns:auto 1fr;gap:.2rem 1rem;padding:1rem}
+.ev .date{grid-row:1/4;display:grid;place-items:center;align-content:center;width:4.2rem;border:1px solid var(--ink);padding:.4rem .2rem;text-align:center;line-height:1.2}
+.ev .date b{font-family:var(--display);font-size:1.9rem;font-weight:700}
+.ev .date span{font-size:.8rem}
+.ev h3{font-family:var(--display);font-size:1.35rem;font-weight:700;line-height:1.35}
+.ev .info{display:grid;gap:.1rem;color:var(--ink-2);font-size:.92rem}
+.ev .row{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin-top:.6rem}
+.ev .row .btn{flex:1}
+.ev .row .btn[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.ev .row .btn[aria-pressed="false"]{background:none;color:var(--ink)}
+.ev .who{grid-column:1/-1;color:var(--muted);font-size:.85rem}
+.tag{font-size:.72rem;font-weight:500;border:1px solid var(--rule);padding:0 .45rem;color:var(--muted);vertical-align:middle;margin-inline-start:.35rem;font-family:var(--ui)}
+.arow{display:flex;gap:.85rem;align-items:flex-start;width:100%;border:0;background:none;text-align:start;padding:.85rem 1rem;border-bottom:1px solid var(--line)}
+.arow .t{flex:1;min-width:0;display:grid}
+.arow b{font-weight:600}
+.arow span{color:var(--ink-2);font-size:.92rem;overflow-wrap:anywhere}
+.arow time{font-size:.78rem;color:var(--muted)}
+.arow.new{background:var(--surface)}
+.arow .av{width:2.6rem;height:2.6rem;font-size:1.2rem}
+.me-head{display:grid;justify-items:center;text-align:center;gap:.4rem;padding:1.5rem 1rem 1rem}
+.me-head h2{font-family:var(--display);font-size:1.7rem;font-weight:700;line-height:1.3}
+.me-head p{color:var(--muted);direction:ltr;font-variant-numeric:tabular-nums}
+.group{border-block:1px solid var(--line);margin-bottom:1rem}
+.group h3{font-size:.85rem;font-weight:600;color:var(--muted);padding:.8rem 1rem .2rem}
+.opt{display:flex;align-items:center;gap:.8rem;padding:.8rem 1rem;width:100%;border:0;background:none;text-align:start;min-height:3.4rem}
+.opt + .opt{border-top:1px solid var(--line)}
+.opt .t{flex:1;min-width:0;display:grid}
+.opt .t span{font-size:.85rem;color:var(--muted)}
+.seg{display:flex;border:1px solid var(--ink)}
+.seg button{border:0;background:none;padding:.35rem .75rem;min-height:2.5rem;font-size:.9rem}
+.seg button + button{border-inline-start:1px solid var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);font-weight:600}
+.state{font-size:.8rem;font-weight:600;border:1px solid var(--rule);padding:0 .5rem;white-space:nowrap}
+.state.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+/* ---------- sheets, banner, toast, photo viewer ---------- */
+.sheet{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;justify-content:flex-end;background:var(--scrim)}
+.sheet-in{background:var(--bg);max-height:92%;overflow-y:auto;padding:1rem 1.1rem calc(env(safe-area-inset-bottom,0px) + 1.2rem);display:grid;gap:1rem;border-radius:18px 18px 0 0}
+.sheet-top{display:flex;align-items:center;gap:.5rem}
+.sheet-top h2{flex:1;font-family:var(--display);font-weight:700;font-size:1.6rem;line-height:1.3}
+.sheet form{display:grid;gap:.9rem}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.grid2>*{min-width:0}
+.steps{margin:0;padding-inline-start:1.3rem;display:grid;gap:.5rem}
+.steps li::marker{font-weight:600}
+#banner{position:absolute;z-index:40;top:calc(env(safe-area-inset-top,0px) + .5rem);inset-inline:.5rem;transform:translateY(-140%);transition:transform .35s cubic-bezier(.2,.9,.2,1)}
+#banner.show{transform:none}
+#banner button.card{width:100%;display:grid;grid-template-columns:auto 1fr auto;gap:.1rem .7rem;align-items:center;text-align:start;border:1px solid var(--line);background:var(--banner);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-radius:18px;padding:.7rem .85rem;box-shadow:var(--shadow)}
+#banner .appic{grid-row:1/3;width:2.4rem;height:2.4rem;border-radius:.6rem;background:#0b0b0b;color:#fff;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:1.25rem}
+#banner .app{font-size:.75rem;color:var(--muted)}
+#banner b{grid-column:2;font-weight:600;font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#banner .body{grid-column:2/4;font-size:.9rem;color:var(--ink-2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#banner time{grid-row:1;grid-column:3;font-size:.75rem;color:var(--muted)}
+#banner .cap{display:block;text-align:center;font-size:.78rem;color:var(--bg);background:var(--ink);margin:.35rem auto 0;width:max-content;max-width:100%;padding:.1rem .7rem;border-radius:999px}
+#toast{position:absolute;z-index:45;inset-inline:1rem;bottom:calc(env(safe-area-inset-bottom,0px) + 5rem);background:var(--ink);color:var(--bg);padding:.7rem 1rem;font-size:.92rem;text-align:center;border-radius:12px;opacity:0;transform:translateY(10px);transition:opacity .2s,transform .2s;pointer-events:none}
+#toast.show{opacity:1;transform:none}
+#viewer{position:absolute;inset:0;z-index:50;background:#000;display:grid;place-items:center}
+#viewer img{max-width:100%;max-height:100%}
+#viewer .iconbtn{position:absolute;top:calc(env(safe-area-inset-top,0px) + .5rem);inset-inline-end:.5rem;color:#fff}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M20 12 4 4l3 8-3 8 16-8zM7 12h7"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></symbol>
+  <symbol id="i-clip" viewBox="0 0 24 24"><path d="M3 8a2 2 0 0 1 2-2h2.5l1.5-2h6l1.5 2H19a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="3.5"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 21h4"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.2-4 4.2-6 8-6s6.8 2 8 6"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.9-3.4 3.3-5 6.5-5s5.6 1.6 6.5 5M15.5 4.6a3.5 3.5 0 0 1 0 6.8M18 14.6c2 .6 3.2 2.3 3.5 5.4"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m4 12.5 4.5 4.5L20 6"/></symbol>
+  <symbol id="i-check2" viewBox="0 0 24 24"><path d="m1.5 12.5 4.5 4.5L17 6M11 16l1 1L22.5 6"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></symbol>
+  <symbol id="i-reply" viewBox="0 0 24 24"><path d="M14 8V4l7 7-7 7v-4c-5 0-8 1.5-11 5 1-6 4-10 11-11z"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12"/><path d="M16 8V4H4v12h4"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M9 4h6l-1 6 4 4H6l4-4zM12 14v7"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18.5h2"/></symbol>
+  <symbol id="i-text" viewBox="0 0 24 24"><path d="M4 18 9 6l5 12M5.6 14h6.8M15 18l3-7 3 7M15.8 16h4.4"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8-4.3-4.1 5.9-.9z"/></symbol>
+  <symbol id="i-reset" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4h4"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 3v12M7 8l5-5 5 5M5 13v7h14v-7"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></symbol>
+</svg>
+
+<div id="app">
+
+  <!-- 1. welcome -->
+  <section class="screen start" id="s-welcome" aria-labelledby="w-t">
+    <div class="top"><span class="brandmark">آل سلوم</span><span class="trial">نسخة تجريبية</span></div>
+    <div class="hero">
+      <p class="muted">تطبيق عائلة</p>
+      <h1 id="w-t">آل سلوم</h1>
+      <div class="orn" aria-hidden="true"><i></i><b></b><i></i></div>
+      <p class="origin">ضرماء · الغييثات من الدواسر</p>
+      <p class="lede">دردشة العائلة ومناسباتها وأخبارها في تطبيق واحد، وكل فرد باسمه.</p>
+    </div>
+    <div style="display:grid;gap:.75rem">
+      <button class="btn wide" type="button" data-go="phone">ابدأ التجربة</button>
+      <p class="note">هذي نسخة للتجربة والتقييم. الأسماء والرسائل الموجودة فيها أمثلة، وما يُرسل منها شي لأحد.</p>
+    </div>
+  </section>
+
+  <!-- 2. phone number -->
+  <section class="screen start step" id="s-phone" hidden aria-labelledby="p-t">
+    <div class="top"><button class="iconbtn" type="button" data-back aria-label="رجوع"><svg class="ic"><use href="#i-back"/></svg></button><span class="trial">نسخة تجريبية</span></div>
+    <h2 id="p-t">رقم جوالك</h2>
+    <p class="muted">ندخلك برقم جوالك، بدون كلمة مرور. يوصلك رمز من أربعة أرقام.</p>
+    <form id="f-phone" novalidate>
+      <label class="f" for="phone">رقم الجوال
+        <span class="field"><input id="phone" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="05xxxxxxxx" maxlength="12" dir="ltr" aria-describedby="phone-err"><span class="cc">+966</span></span>
+      </label>
+      <p class="err" id="phone-err" role="alert"></p>
+      <button class="btn wide" type="submit">أرسل الرمز</button>
+    </form>
+    <p class="note">في التجربة ما يوصلك رمز حقيقي، ورقمك ما يُحفظ إلا على جوالك.</p>
+  </section>
+
+  <!-- 3. code -->
+  <section class="screen start step" id="s-code" hidden aria-labelledby="c-t">
+    <div class="top"><button class="iconbtn" type="button" data-back aria-label="رجوع"><svg class="ic"><use href="#i-back"/></svg></button><span class="trial">نسخة تجريبية</span></div>
+    <h2 id="c-t">رمز التحقق</h2>
+    <p class="muted" id="code-to">أرسلنا الرمز إلى رقمك.</p>
+    <form id="f-code" novalidate>
+      <div class="otp" role="group" aria-label="الرمز من أربعة أرقام">
+        <input inputmode="numeric" maxlength="1" aria-label="الرقم الأول" autocomplete="one-time-code">
+        <input inputmode="numeric" maxlength="1" aria-label="الرقم الثاني">
+        <input inputmode="numeric" maxlength="1" aria-label="الرقم الثالث">
+        <input inputmode="numeric" maxlength="1" aria-label="الرقم الرابع">
+      </div>
+      <p class="err" id="code-err" role="alert"></p>
+      <button class="btn wide" type="submit">تأكيد</button>
+    </form>
+    <p class="note">للتجربة: اكتب أي أربعة أرقام.</p>
+  </section>
+
+  <!-- 4. name -->
+  <section class="screen start step" id="s-name" hidden aria-labelledby="n-t">
+    <div class="top"><button class="iconbtn" type="button" data-back aria-label="رجوع"><svg class="ic"><use href="#i-back"/></svg></button><span class="trial">نسخة تجريبية</span></div>
+    <h2 id="n-t">اسمك</h2>
+    <p class="muted">هذا الاسم اللي يشوفه أفراد العائلة في الدردشة. في النسخة الحقيقية ينربط باسمك في شجرة العائلة بعد موافقة المشرف.</p>
+    <form id="f-name" novalidate>
+      <label class="f" for="myname">الاسم
+        <span class="field"><input id="myname" autocomplete="name" maxlength="40" placeholder="الاسم الأول واسم الأب" aria-describedby="name-err"></span>
+      </label>
+      <p class="err" id="name-err" role="alert"></p>
+      <button class="btn wide" type="submit">التالي</button>
+    </form>
+  </section>
+
+  <!-- 5. notifications -->
+  <section class="screen start step" id="s-notif" hidden aria-labelledby="ns-t">
+    <div class="top"><button class="iconbtn" type="button" data-back aria-label="رجوع"><svg class="ic"><use href="#i-back"/></svg></button><span class="trial">نسخة تجريبية</span></div>
+    <h2 id="ns-t">الإشعارات</h2>
+    <p class="muted">عشان توصلك رسائل العائلة والعزايم على شاشة جوالك، مثل كذا:</p>
+    <div class="demo-banner" aria-hidden="true">
+      <span class="av sm ink">س</span>
+      <div style="display:grid;min-width:0"><b style="font-weight:600">مجموعة العائلة</b><span style="color:var(--ink-2);font-size:.9rem">سلمان: تذكير بعشاء العائلة يوم الخميس الساعة ٨</span></div>
+    </div>
+    <p class="note" id="ns-help"></p>
+    <div style="display:grid;gap:.6rem;margin-top:auto">
+      <button class="btn wide" type="button" id="ns-on">فعّل الإشعارات</button>
+      <button class="btn wide ghost" type="button" id="ns-later">لاحقاً</button>
+    </div>
+  </section>
+
+  <!-- 6. the app -->
+  <section class="screen" id="s-main" hidden>
+    <!-- chats -->
+    <div class="tabpane" id="t-chats" role="tabpanel" aria-labelledby="tab-chats" style="display:flex;flex-direction:column;flex:1;min-height:0">
+      <div class="bar"><h1>الدردشات</h1><span class="trial">تجريبي</span>
+        <button class="iconbtn" type="button" id="new-chat" aria-label="محادثة جديدة"><svg class="ic"><use href="#i-edit"/></svg></button></div>
+      <div class="pane">
+        <label class="search" for="chat-q"><svg class="ic"><use href="#i-search"/></svg><span class="sr">ابحث في الدردشات</span><input id="chat-q" type="search" placeholder="ابحث باسم أو رسالة"></label>
+        <ul class="rows" id="chat-list"></ul>
+        <p class="empty" id="chat-none" hidden>ما فيه نتائج.</p>
+      </div>
+    </div>
+    <!-- events -->
+    <div class="tabpane" id="t-events" role="tabpanel" aria-labelledby="tab-events" hidden style="display:flex;flex-direction:column;flex:1;min-height:0">
+      <div class="bar"><h1>المناسبات</h1><span class="trial">تجريبي</span></div>
+      <div class="pane"><div class="sec">
+        <button class="btn wide" type="button" id="add-ev"><svg class="ic"><use href="#i-plus"/></svg>أضف مناسبة أو عزيمة</button>
+        <div id="ev-list" style="display:grid;gap:.9rem"></div>
+      </div></div>
+    </div>
+    <!-- alerts -->
+    <div class="tabpane" id="t-alerts" role="tabpanel" aria-labelledby="tab-alerts" hidden style="display:flex;flex-direction:column;flex:1;min-height:0">
+      <div class="bar"><h1>الإشعارات</h1><span class="trial">تجريبي</span></div>
+      <div class="pane"><div id="alert-list"></div><p class="empty" id="alert-none">ما وصلك شي للحين. أي رسالة أو عزيمة جديدة تظهر هنا.</p></div>
+    </div>
+    <!-- me -->
+    <div class="tabpane" id="t-me" role="tabpanel" aria-labelledby="tab-me" hidden style="display:flex;flex-direction:column;flex:1;min-height:0">
+      <div class="bar"><h1>حسابي</h1><span class="trial">تجريبي</span></div>
+      <div class="pane">
+        <div class="me-head"><span class="av lg ink" id="me-av"></span><h2 id="me-name"></h2><p id="me-phone"></p></div>
+        <div class="group">
+          <h3>رأيك يهمنا</h3>
+          <a class="opt" id="feedback" href="#" target="_blank" rel="noopener" style="color:inherit;text-decoration:none"><svg class="ic"><use href="#i-star"/></svg><span class="t"><b>رأيك في التجربة</b><span>دقيقتين، وتساعدنا نقرر شكل التطبيق</span></span></a>
+        </div>
+        <div class="group">
+          <h3>الإشعارات والتطبيق</h3>
+          <button class="opt" type="button" id="me-notif"><svg class="ic"><use href="#i-bell"/></svg><span class="t"><b>إشعارات الجوال</b><span id="me-notif-sub"></span></span><span class="state" id="me-notif-state"></span></button>
+          <button class="opt" type="button" id="me-test"><svg class="ic"><use href="#i-phone"/></svg><span class="t"><b>جرّب إشعار على جوالك</b><span>يوصلك بعد ٥ ثواني، اطلع من التطبيق أو اقفل الشاشة وانتظره</span></span></button>
+          <button class="opt" type="button" id="me-install"><svg class="ic"><use href="#i-share"/></svg><span class="t"><b>ثبّت التطبيق على الشاشة الرئيسية</b><span id="me-install-sub">يفتح مثل أي تطبيق، وتوصله الإشعارات</span></span></button>
+        </div>
+        <div class="group">
+          <h3>العرض</h3>
+          <div class="opt"><svg class="ic"><use href="#i-text"/></svg><span class="t"><b>حجم الخط</b></span>
+            <span class="seg" role="group" aria-label="حجم الخط"><button type="button" data-fs="0">عادي</button><button type="button" data-fs="1">كبير</button><button type="button" data-fs="2">أكبر</button></span></div>
+          <div class="opt"><svg class="ic"><use href="#i-moon"/></svg><span class="t"><b>المظهر</b></span>
+            <span class="seg" role="group" aria-label="المظهر"><button type="button" data-th="">تلقائي</button><button type="button" data-th="light">فاتح</button><button type="button" data-th="dark">داكن</button></span></div>
+        </div>
+        <div class="group">
+          <button class="opt" type="button" id="me-reset"><svg class="ic"><use href="#i-reset"/></svg><span class="t"><b>ابدأ التجربة من جديد</b><span>يمسح كل شي سويته في التجربة من هالجوال</span></span></button>
+        </div>
+        <p class="empty" style="padding-top:.5rem">تطبيق عائلة آل سلوم · نسخة تجريبية</p>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="أقسام التطبيق">
+      <button type="button" role="tab" id="tab-chats" aria-controls="t-chats" aria-selected="true" data-tab="chats"><svg class="ic"><use href="#i-chat"/></svg>الدردشات<span class="dot" id="dot-chats" hidden></span></button>
+      <button type="button" role="tab" id="tab-events" aria-controls="t-events" aria-selected="false" data-tab="events"><svg class="ic"><use href="#i-cal"/></svg>المناسبات</button>
+      <button type="button" role="tab" id="tab-alerts" aria-controls="t-alerts" aria-selected="false" data-tab="alerts"><svg class="ic"><use href="#i-bell"/></svg>الإشعارات<span class="dot" id="dot-alerts" hidden></span></button>
+      <button type="button" role="tab" id="tab-me" aria-controls="t-me" aria-selected="false" data-tab="me"><svg class="ic"><use href="#i-user"/></svg>حسابي</button>
+    </nav>
+  </section>
+
+  <!-- a conversation -->
+  <section class="screen" id="chat" aria-labelledby="chat-name" aria-hidden="true">
+    <div class="bar chead">
+      <button class="iconbtn" type="button" id="chat-back" aria-label="رجوع إلى الدردشات"><svg class="ic"><use href="#i-back"/></svg></button>
+      <div class="who"><span class="av sm" id="chat-av"></span><div><b id="chat-name"></b><span id="chat-sub"></span></div></div>
+    </div>
+    <div class="msgs" id="msgs" role="log" aria-live="polite"></div>
+    <div class="replybar" id="replybar" hidden><div><b id="reply-who"></b><span id="reply-text"></span></div><button class="iconbtn" type="button" id="reply-x" aria-label="إلغاء الرد"><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <form class="compose" id="compose" novalidate>
+      <div class="box" id="box">
+        <button class="iconbtn" type="button" id="pick-btn" aria-label="أرسل صورة"><svg class="ic"><use href="#i-clip"/></svg></button>
+        <input type="file" id="pick" accept="image/*" hidden>
+        <label class="sr" for="text">اكتب رسالة</label>
+        <textarea id="text" rows="1" placeholder="اكتب رسالة" enterkeyhint="send"></textarea>
+      </div>
+      <div class="rec" id="rec" hidden><span class="redot" aria-hidden="true"></span><time id="rec-t">٠:٠٠</time>
+        <button class="iconbtn" type="button" id="rec-x" aria-label="إلغاء التسجيل"><svg class="ic"><use href="#i-trash"/></svg></button></div>
+      <button class="send" type="button" id="mic" aria-label="سجّل رسالة صوتية"><svg class="ic"><use href="#i-mic"/></svg></button>
+      <button class="send" type="submit" id="send" aria-label="أرسل" hidden><svg class="ic" style="transform:scaleX(-1)"><use href="#i-send"/></svg></button>
+    </form>
+  </section>
+
+  <!-- new conversation -->
+  <div class="sheet" id="sh-new" hidden><div class="sheet-in" role="dialog" aria-modal="true" aria-labelledby="new-t" tabindex="-1">
+    <div class="sheet-top"><h2 id="new-t">محادثة جديدة</h2><button class="iconbtn" type="button" data-close aria-label="إغلاق"><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <p class="note">في النسخة الحقيقية تظهر هنا أسماء أفراد العائلة المسجلين، مرتبة حسب الفروع.</p>
+    <ul class="rows" id="people"></ul>
+  </div></div>
+
+  <!-- new event -->
+  <div class="sheet" id="sh-ev" hidden><div class="sheet-in" role="dialog" aria-modal="true" aria-labelledby="ev-t" tabindex="-1">
+    <div class="sheet-top"><h2 id="ev-t">مناسبة جديدة</h2><button class="iconbtn" type="button" data-close aria-label="إغلاق"><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <form id="f-ev" novalidate>
+      <label class="f" for="ev-title">اسم المناسبة<span class="field"><input id="ev-title" maxlength="60" placeholder="مثال: عشاء العائلة"></span></label>
+      <div class="grid2">
+        <label class="f" for="ev-date">التاريخ<span class="field"><input id="ev-date" type="date"></span></label>
+        <label class="f" for="ev-time">الوقت<span class="field"><input id="ev-time" type="time" value="20:00"></span></label>
+      </div>
+      <label class="f" for="ev-place">المكان<span class="field"><input id="ev-place" maxlength="60" placeholder="مثال: الرياض"></span></label>
+      <p class="err" id="ev-err" role="alert"></p>
+      <button class="btn wide" type="submit">أضف وأرسل تنبيه للعائلة</button>
+    </form>
+  </div></div>
+
+  <!-- install help -->
+  <div class="sheet" id="sh-install" hidden><div class="sheet-in" role="dialog" aria-modal="true" aria-labelledby="in-t" tabindex="-1">
+    <div class="sheet-top"><h2 id="in-t">ثبّت التطبيق</h2><button class="iconbtn" type="button" data-close aria-label="إغلاق"><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <div id="in-body"></div>
+  </div></div>
+
+  <div id="banner" aria-live="assertive"></div>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <div id="viewer" hidden><img alt="صورة مرسلة"><button class="iconbtn" type="button" aria-label="إغلاق"><svg class="ic"><use href="#i-x"/></svg></button></div>
+</div>
+
+<script>
+'use strict';
+/* =====================================================================================================
+   Alsalloom family app, trial build. Everything happens on the tester's phone: the sample people, their
+   replies and the notifications are simulated, and nothing leaves the device. Map of this script:
+   settings · helpers · sample data and storage · navigation · getting started · chats list · a conversation
+   (text, photos, voice notes, replies) · simulated replies · notifications · events · alerts · me · start-up
+   ===================================================================================================== */
+
+/* ---------- settings ---------- */
+const FEEDBACK_URL='';              // the Google Form link goes here once it exists
+const STORE='alsalloom-trial-v1';
+
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const AR=n=>String(n).replace(/\d/g,d=>'٠١٢٣٤٥٦٧٨٩'[d]);
+const uid=()=>Math.random().toString(36).slice(2,10);
+const NOW=()=>Date.now();
+const fTime=new Intl.DateTimeFormat('ar-SA-u-ca-gregory',{hour:'numeric',minute:'2-digit'});
+const fDay=new Intl.DateTimeFormat('ar-SA-u-ca-gregory',{weekday:'long'});
+const fDate=new Intl.DateTimeFormat('ar-SA-u-ca-gregory',{weekday:'long',day:'numeric',month:'long'});
+const fDM=new Intl.DateTimeFormat('ar-SA-u-ca-gregory',{day:'numeric',month:'numeric'});
+const sameDay=(a,b)=>new Date(a).toDateString()===new Date(b).toDateString();
+function when(t){const d=new Date(t),n=new Date();if(sameDay(d,n))return fTime.format(d);const y=new Date(n);y.setDate(n.getDate()-1);if(sameDay(d,y))return'أمس';
+  if(n-d<6*864e5)return fDay.format(d);return fDM.format(d)}
+function dayLabel(t){const d=new Date(t),n=new Date();if(sameDay(d,n))return'اليوم';const y=new Date(n);y.setDate(n.getDate()-1);if(sameDay(d,y))return'أمس';return fDate.format(d)}
+const ic=(id,cls='')=>`<svg class="ic ${cls}" aria-hidden="true"><use href="#i-${id}"/></svg>`;
+const first=n=>(n||'').trim().split(/\s+/)[0]||'';
+const initial=n=>(first(n).replace(/^(ال|آل|أبو|ابو)/,'')||n||'؟').charAt(0);
+const ls={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+let toastT;function toast(s){const t=$('#toast');t.textContent=s;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2600)}
+const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const standalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+
+/* ---------- sample data and storage ---------- */
+/* The people in the trial are sample names, so no real family member is shown saying anything. */
+const PEOPLE={abd:'عبدالله',moh:'محمد',sal:'سلمان',fah:'فهد',kha:'خالد',saa:'سعد',ibr:'إبراهيم',adm:'المشرف'};
+function nextWeekday(wd,minDays){const d=new Date();d.setHours(20,0,0,0);d.setDate(d.getDate()+minDays);while(d.getDay()!==wd)d.setDate(d.getDate()+1);return d}
+function seed(){
+  const t=NOW(),m=60e3,h=36e5,iso=d=>d.toISOString().slice(0,10);
+  const thu=nextWeekday(4,3),fri=nextWeekday(5,24);
+  const E=[
+    {id:'e1',title:'عشاء العائلة',date:iso(thu),time:'20:00',place:'الرياض',host:'sal',going:['abd','moh','sal','kha'],sample:true,my:null},
+    {id:'e2',title:'اجتماع العائلة السنوي',date:iso(fri),time:'17:00',place:'ضرماء',host:'adm',going:['ibr','saa'],sample:true,my:null}];
+  const C=[
+    {id:'fam',type:'group',title:'مجموعة العائلة',members:['adm','abd','moh','sal','fah','kha','saa','ibr'],pinned:true,unread:2,msgs:[
+      {id:uid(),from:'sys',t:t-26*h,text:'أنشأ المشرف مجموعة العائلة. كل فرد يُقبل في التطبيق ينضاف لها.'},
+      {id:uid(),from:'adm',t:t-26*h+2*m,text:'حياكم الله جميعاً. هذي مجموعة لأفراد العائلة المسجلين، للأخبار والعزايم والتواصل.'},
+      {id:uid(),from:'abd',t:t-25*h,text:'الله يحييك، فكرة طيبة وتجمعنا'},
+      {id:uid(),from:'sal',t:t-3*h,event:'e1'},
+      {id:uid(),from:'moh',t:t-2*h,text:'إن شاء الله حاضرين'},
+      {id:uid(),from:'kha',t:t-40*m,text:'حاضرين بإذن الله، وش نجيب معنا؟'}]},
+    {id:'abd',type:'dm',with:'abd',unread:1,msgs:[
+      {id:uid(),from:'me',t:t-28*h,text:'هلا أبو محمد',st:'read'},
+      {id:uid(),from:'abd',t:t-27*h,text:'هلا والله، حياك'},
+      {id:uid(),from:'abd',t:t-55*m,text:'السلام عليكم، بتحضر العشاء يوم الخميس؟'}]},
+    {id:'e1c',type:'group',title:'عشاء العائلة',ev:'e1',members:['sal','abd','moh','kha'],unread:0,msgs:[
+      {id:uid(),from:'sys',t:t-3*h,text:'مجموعة خاصة بمناسبة «عشاء العائلة». ينضاف لها كل من يأكد حضوره.'},
+      {id:uid(),from:'sal',t:t-3*h+m,text:'أرسل الموقع هنا قبلها بيوم إن شاء الله'}]},
+    {id:'sal',type:'dm',with:'sal',unread:0,msgs:[
+      {id:uid(),from:'sal',t:t-30*h,text:'أرسلت لك صورة الشجرة القديمة؟'},
+      {id:uid(),from:'me',t:t-29*h,text:'إيه وصلت، الله يعطيك العافية',st:'read'}]},
+    {id:'fah',type:'dm',with:'fah',unread:0,msgs:[
+      {id:uid(),from:'fah',t:t-3*864e5,text:'الله يحييك يا أبو فلان'},
+      {id:uid(),from:'me',t:t-3*864e5+5*m,text:'هلا بك',st:'read'}]}];
+  return{chats:C,events:E,alerts:[],demo:{reminder:false}}
+}
+let ME=ls.get(STORE+':me'),S=ls.get(STORE+':data');
+if(!S||!S.chats)S=seed();
+const MEDIA={};                      // photos and voice notes live in memory; storage keeps only small ones
+function save(){const keep={...S,chats:S.chats.map(c=>({...c,msgs:c.msgs.map(x=>{const y={...x};
+    if(y.img&&y.img.length>400000){MEDIA[y.id]=y.img;y.img='';y.lost=true}if(y.audio&&y.audio.length>400000){MEDIA[y.id]=y.audio;y.audio='';y.lost=true}return y})}))};
+  if(!ls.set(STORE+':data',keep)){ls.set(STORE+':data',{...keep,chats:keep.chats.map(c=>({...c,msgs:c.msgs.map(x=>({...x,img:'',audio:''}))}))})}}
+const chatOf=id=>S.chats.find(c=>c.id===id);
+const evOf=id=>S.events.find(e=>e.id===id);
+const nameOf=f=>f==='me'?(ME?.name||'أنت'):PEOPLE[f]||f;
+const titleOf=c=>c.type==='dm'?PEOPLE[c.with]:c.title;
+
+/* ---------- navigation: every screen and sheet is a step back in history, so the phone's back works ---------- */
+const STEPS=['welcome','phone','code','name','notif'];
+let SCREEN='welcome',TAB='chats',OPEN=null;
+function show(id){STEPS.concat('main').forEach(s=>$('#s-'+s).hidden=s!==id);SCREEN=id;
+  const el=$('#s-'+id).querySelector('input:not([type=hidden])');if(el&&id!=='main'&&id!=='welcome'&&matchMedia('(hover:hover)').matches)setTimeout(()=>el.focus({preventScroll:true}),60)}
+function go(id,push=true){show(id);if(push)history.pushState({s:id},'')}
+addEventListener('popstate',e=>{
+  if(!$('#viewer').hidden){$('#viewer').hidden=true;return}
+  const sh=$$('.sheet').find(x=>!x.hidden);if(sh){closeSheet(sh,false);return}
+  if(OPEN){closeChat(false);return}
+  const s=e.state&&e.state.s;if(s&&s!=='main'&&ME&&ME.done){history.pushState({s:'main'},'');return}
+  if(s)show(s)});
+document.addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(b)go(b.dataset.go);const bk=e.target.closest('[data-back]');if(bk)history.back()});
+function openSheet(el){el.hidden=false;history.pushState({sheet:el.id},'');const box=el.querySelector('[role=dialog]');box.focus({preventScroll:true})}
+function closeSheet(el,pop=true){if(el.hidden)return;el.hidden=true;if(pop)history.back()}
+$$('.sheet').forEach(sh=>{sh.addEventListener('click',e=>{if(e.target===sh||e.target.closest('[data-close]'))closeSheet(sh)})});
+addEventListener('keydown',e=>{if(e.key!=='Escape')return;const sh=$$('.sheet').find(x=>!x.hidden);if(sh)return closeSheet(sh);if(!$('#viewer').hidden)return history.back();if(OPEN)history.back()});
+function setTab(t){TAB=t;$$('.tabs [data-tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===t)));
+  ['chats','events','alerts','me'].forEach(x=>{const p=$('#t-'+x);p.hidden=x!==t;p.style.display=x===t?'flex':'none'});
+  if(t==='alerts'){drawAlerts();S.alerts.forEach(a=>a.seen=true);save();drawDots()}
+  if(t==='events')drawEvents();if(t==='me')drawMe();if(t==='chats')drawChats()}
+$$('.tabs [data-tab]').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
+$('.tabs').addEventListener('keydown',e=>{const ts=$$('.tabs [data-tab]'),i=ts.indexOf(document.activeElement);if(i<0)return;
+  const d=e.key==='ArrowLeft'?1:e.key==='ArrowRight'?-1:0;if(!d)return;e.preventDefault();const n=ts[(i+d+ts.length)%ts.length];n.focus();setTab(n.dataset.tab)});
+
+/* the keyboard on a phone shrinks the visible area: the app follows it, so the message box stays above the keys */
+function fitViewport(){const v=window.visualViewport;document.documentElement.style.setProperty('--vh',(v?v.height:innerHeight)+'px');if(v)window.scrollTo(0,0)}
+if(window.visualViewport){visualViewport.addEventListener('resize',fitViewport);visualViewport.addEventListener('scroll',fitViewport)}
+addEventListener('resize',fitViewport);fitViewport();
+
+/* ---------- getting started ---------- */
+function normPhone(v){let d=v.replace(/[^\d٠-٩]/g,'').replace(/[٠-٩]/g,c=>'٠١٢٣٤٥٦٧٨٩'.indexOf(c));if(d.startsWith('966'))d=d.slice(3);if(d.startsWith('0'))d=d.slice(1);return d}
+$('#f-phone').addEventListener('submit',e=>{e.preventDefault();const d=normPhone($('#phone').value);
+  if(!/^5\d{8}$/.test(d)){$('#phone-err').textContent='اكتب رقم جوال سعودي، مثل 05xxxxxxxx';$('#phone').setAttribute('aria-invalid','true');return}
+  $('#phone-err').textContent='';$('#phone').removeAttribute('aria-invalid');ME={...(ME||{}),phone:d};ls.set(STORE+':me',ME);
+  $('#code-to').textContent='أرسلنا الرمز إلى ‎+966 '+d.replace(/(\d{2})(\d{3})(\d{4})/,'$1 $2 $3')+'‎.';$$('.otp input').forEach(i=>i.value='');go('code')});
+const otp=$$('.otp input');
+otp.forEach((inp,i)=>{
+  inp.addEventListener('input',()=>{inp.value=inp.value.replace(/[^\d٠-٩]/g,'').slice(-1);if(inp.value&&i<3)otp[i+1].focus();if(otp.every(x=>x.value))$('#f-code').requestSubmit()});
+  inp.addEventListener('keydown',e=>{if(e.key==='Backspace'&&!inp.value&&i>0){otp[i-1].focus();otp[i-1].value=''}});
+  inp.addEventListener('paste',e=>{const t=(e.clipboardData.getData('text')||'').replace(/\D/g,'').slice(0,4);if(t.length){e.preventDefault();t.split('').forEach((c,k)=>otp[k].value=c);if(t.length===4)$('#f-code').requestSubmit()}})});
+$('#f-code').addEventListener('submit',e=>{e.preventDefault();if(!otp.every(x=>x.value)){$('#code-err').textContent='اكتب الأرقام الأربعة';otp.find(x=>!x.value).focus();return}
+  $('#code-err').textContent='';$('#myname').value=ME?.name||'';go('name')});
+$('#f-name').addEventListener('submit',e=>{e.preventDefault();const n=$('#myname').value.trim().replace(/\s+/g,' ');
+  if(n.length<2){$('#name-err').textContent='اكتب اسمك';$('#myname').setAttribute('aria-invalid','true');return}
+  $('#name-err').textContent='';$('#myname').removeAttribute('aria-invalid');ME={...ME,name:n};ls.set(STORE+':me',ME);notifHelp();go('notif')});
+function notifHelp(){const h=$('#ns-help');
+  if(isIOS&&!standalone())h.textContent='في الآيفون توصل الإشعارات بعد ما تثبّت التطبيق على الشاشة الرئيسية. تقدر تكمل التجربة الحين، وتفعّلها بعدين من «حسابي».';
+  else if(!('Notification' in window))h.textContent='متصفحك ما يدعم إشعارات الجوال. بتشوف الإشعارات داخل التطبيق.';
+  else h.textContent='يطلب منك الجوال الإذن، اختر «السماح».'}
+$('#ns-on').onclick=async()=>{await askNotif();enterApp()};
+$('#ns-later').onclick=()=>enterApp();
+function enterApp(){ME={...ME,done:true};ls.set(STORE+':me',ME);history.replaceState({s:'main'},'');show('main');setTab('chats');drawDots();scheduleDemo()}
+
+/* ---------- chats list ---------- */
+function lastOf(c){return c.msgs[c.msgs.length-1]}
+function preview(c,m){if(!m)return'';const who=m.from==='me'?'أنت: ':c.type==='group'&&m.from!=='sys'?nameOf(m.from)+': ':'';
+  const body=m.event?'عزيمة: '+(evOf(m.event)?.title||''):m.img?'صورة':m.audio||m.lost?'رسالة صوتية':m.text;return who+body}
+function avatarOf(c,cls=''){if(c.type==='dm')return`<span class="av ${cls}" aria-hidden="true">${esc(initial(PEOPLE[c.with]))}</span>`;
+  return`<span class="av ink ${cls}" aria-hidden="true">${ic(c.ev?'cal':'users')}</span>`}
+function drawChats(){const q=$('#chat-q').value.trim();
+  const list=S.chats.filter(c=>!q||titleOf(c).includes(q)||c.msgs.some(m=>(m.text||'').includes(q)))
+    .sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)||(lastOf(b)?.t||0)-(lastOf(a)?.t||0));
+  $('#chat-none').hidden=list.length>0;
+  $('#chat-list').innerHTML=list.map(c=>{const m=lastOf(c),ty=TYPING[c.id];
+    return`<li><button type="button" class="crow${c.unread?' unread':''}" data-chat="${c.id}">${avatarOf(c)}<span class="mid">
+      <span class="l1"><b>${esc(titleOf(c))}</b><time>${m?when(m.t):''}</time></span>
+      <span class="l2"><span class="last">${ty?'<i>'+esc(ty)+' يكتب…</i>':(m&&m.from==='me'?tickSvg(m.st):'')+esc(preview(c,m))}</span>${c.pinned?`<svg class="ic pin" aria-label="مثبتة"><use href="#i-pin"/></svg>`:''}${c.unread?`<span class="count" aria-label="${c.unread} غير مقروءة">${AR(c.unread)}</span>`:''}</span>
+    </span></button></li>`}).join('');
+  drawDots()}
+$('#chat-q').addEventListener('input',drawChats);
+$('#chat-list').addEventListener('click',e=>{const b=e.target.closest('[data-chat]');if(b)openChat(b.dataset.chat)});
+function drawDots(){const n=S.chats.reduce((a,c)=>a+(c.unread||0),0),a=S.alerts.filter(x=>!x.seen).length;
+  const d1=$('#dot-chats'),d2=$('#dot-alerts');d1.hidden=!n;d1.textContent=AR(n);d2.hidden=!a||TAB==='alerts';d2.textContent=AR(a);
+  if('setAppBadge' in navigator){try{n?navigator.setAppBadge(n):navigator.clearAppBadge()}catch(e){}}}
+$('#new-chat').onclick=()=>{$('#people').innerHTML=Object.entries(PEOPLE).filter(([k])=>k!=='adm').map(([k,n])=>
+  `<li><button type="button" class="crow" data-person="${k}"><span class="av" aria-hidden="true">${esc(initial(n))}</span><span class="mid"><span class="l1"><b>${esc(n)}</b></span><span class="l2"><span class="last">اسم للتجربة</span></span></span></button></li>`).join('');openSheet($('#sh-new'))};
+$('#people').addEventListener('click',e=>{const b=e.target.closest('[data-person]');if(!b)return;const k=b.dataset.person;
+  let c=S.chats.find(x=>x.type==='dm'&&x.with===k);if(!c){c={id:k,type:'dm',with:k,unread:0,msgs:[]};S.chats.push(c);save()}
+  $('#sh-new').hidden=true;openChat(c.id,true)});
+
+/* ---------- a conversation ---------- */
+let REPLY=null;
+function tickSvg(st){if(!st)return'';const read=st==='read';return`<svg class="ic tick${read?' read':''}" aria-label="${read?'مقروءة':st==='delivered'?'وصلت':'أُرسلت'}"><use href="#i-${st==='sent'?'check':'check2'}"/></svg>`}
+function subOf(c){if(TYPING[c.id])return TYPING[c.id]+' يكتب…';if(c.type==='dm')return ONLINE[c.with]?'متصل الآن':'آخر ظهور اليوم';
+  return c.members.map(nameOf).slice(0,5).join('، ')+'، أنت'}
+function openChat(id,replace){const c=chatOf(id);if(!c)return;if(OPEN&&OPEN!==id)stopRec(true);const was=OPEN;OPEN=id;c.unread=0;save();REPLY=null;$('#replybar').hidden=true;
+  $('#chat-av').outerHTML=avatarOf(c,'sm').replace('class="av','id="chat-av" class="av');$('#chat-name').textContent=titleOf(c);$('#chat-sub').textContent=subOf(c);
+  drawMsgs(true);const ch=$('#chat');ch.classList.add('open');ch.setAttribute('aria-hidden','false');$('#s-main').setAttribute('aria-hidden','true');if(replace||was)history.replaceState({chat:id},'');else history.pushState({chat:id},'');
+  setTimeout(()=>{if(matchMedia('(hover:hover)').matches)$('#text').focus({preventScroll:true})},280);drawChats();
+  if(c.type==='dm')setTimeout(()=>{ONLINE[c.with]=true;if(OPEN===id)$('#chat-sub').textContent=subOf(c)},900)}
+function closeChat(pop=true){if(!OPEN)return;stopRec(true);OPEN=null;const ch=$('#chat');ch.classList.remove('open');ch.setAttribute('aria-hidden','true');$('#s-main').removeAttribute('aria-hidden');drawChats();if(pop)history.back()}
+$('#chat-back').onclick=()=>closeChat();
+function msgHTML(c,m,prev){
+  if(m.from==='sys')return`<p class="sysmsg">${esc(m.text)}</p>`;
+  const mine=m.from==='me',cont=prev&&prev.from===m.from&&sameDay(prev.t,m.t)&&m.t-prev.t<5*60e3;
+  let body='';
+  if(m.reply)body+=`<div class="quote"><b>${esc(nameOf(m.reply.from))}</b>${esc(m.reply.text)}</div>`;
+  if(m.event){const ev=evOf(m.event);if(ev)body+=evCard(ev)}
+  if(m.img||m.lost&&!m.audio&&!m.dur)body+=m.img||MEDIA[m.id]?`<img src="${m.img||MEDIA[m.id]}" alt="صورة من ${esc(nameOf(m.from))}" data-view>`:'<em>صورة (انحذفت من التجربة)</em>';
+  if(m.audio||m.dur)body+=voiceHTML(m);
+  if(m.text)body+=`<span class="tx">${esc(m.text)}</span>`;
+  return`<div class="m ${mine?'me':'them'}${cont?' cont':''}" data-mid="${m.id}"><div class="bub">${!mine&&c.type==='group'&&!cont?`<span class="from">${esc(nameOf(m.from))}</span>`:''}${body}<div class="meta"><time>${fTime.format(new Date(m.t))}</time>${mine?tickSvg(m.st):''}</div></div></div>`}
+function voiceHTML(m){const bars=Array.from({length:26},(_,i)=>`<i style="height:${30+Math.round(60*Math.abs(Math.sin(i*1.7+m.id.charCodeAt(0))))}%"></i>`).join('');
+  return`<div class="voice"><button type="button" data-play="${m.id}" aria-label="شغّل الرسالة الصوتية"><svg class="ic"><use href="#i-play"/></svg></button><span class="wave" aria-hidden="true">${bars}</span><small>${dur(m.dur||0)}</small></div>`}
+const dur=s=>AR(Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0'));
+function evCard(ev){const d=new Date(ev.date+'T'+ev.time);
+  return`<div class="evcard"><span class="k">عزيمة${ev.sample?' · مثال':''}</span><h3>${esc(ev.title)}</h3><p>${esc(fDate.format(d))}، الساعة ${esc(fTime.format(d))}<br>${esc(ev.place)}</p>
+    <div class="row"><button type="button" data-rsvp="${ev.id}" data-v="yes" aria-pressed="${ev.my==='yes'}"><span>سأحضر</span></button><button type="button" data-rsvp="${ev.id}" data-v="no" aria-pressed="${ev.my==='no'}"><span>أعتذر</span></button></div></div>`}
+function drawMsgs(jump){const c=chatOf(OPEN);if(!c)return;const box=$('#msgs'),atEnd=box.scrollHeight-box.scrollTop-box.clientHeight<80;let html='',prev=null;
+  c.msgs.forEach(m=>{if(!prev||!sameDay(prev.t,m.t))html+=`<p class="day">${esc(dayLabel(m.t))}</p>`;html+=msgHTML(c,m,prev&&sameDay(prev.t,m.t)&&prev.from!=='sys'?prev:null);prev=m});
+  if(TYPING[c.id])html+=`<div class="typing" aria-label="${esc(TYPING[c.id])} يكتب"><i></i><i></i><i></i></div>`;
+  box.innerHTML=html;if(jump||atEnd)box.scrollTop=box.scrollHeight}
+const ta=$('#text');
+function grow(){ta.style.height='auto';ta.style.height=Math.min(ta.scrollHeight,128)+'px';const has=ta.value.trim().length>0;$('#send').hidden=!has&&!RECORDING;$('#mic').hidden=has||RECORDING}
+ta.addEventListener('input',grow);
+ta.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&matchMedia('(hover:hover)').matches){e.preventDefault();$('#compose').requestSubmit()}});
+$('#compose').addEventListener('submit',e=>{e.preventDefault();if(RECORDING)return finishRec();const v=ta.value.trim();if(!v)return;
+  send({text:v});ta.value='';grow();ta.focus({preventScroll:true})});
+function send(part){const c=chatOf(OPEN);if(!c)return;const m={id:uid(),from:'me',t:NOW(),st:'sent',...part};
+  if(REPLY){m.reply=REPLY;REPLY=null;$('#replybar').hidden=true}
+  c.msgs.push(m);save();drawMsgs(true);progress(c,m);replyLater(c,m)}
+function progress(c,m){setTimeout(()=>{m.st='delivered';save();if(OPEN===c.id)drawMsgs();else drawChats()},700);
+  setTimeout(()=>{m.st='read';save();if(OPEN===c.id)drawMsgs();else drawChats()},1900)}
+/* photos: shrunk on the phone before they go into the chat */
+$('#pick-btn').onclick=()=>$('#pick').click();
+$('#pick').addEventListener('change',async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
+  try{const url=await shrink(f,1280,.82);send({img:url})}catch(x){toast('ما قدرنا نفتح الصورة')}});
+function shrink(file,max,q){return new Promise((res,rej)=>{const img=new Image(),u=URL.createObjectURL(file);img.onload=()=>{const k=Math.min(1,max/Math.max(img.width,img.height)),cv=document.createElement('canvas');
+  cv.width=Math.round(img.width*k);cv.height=Math.round(img.height*k);cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);URL.revokeObjectURL(u);res(cv.toDataURL('image/jpeg',q))};img.onerror=rej;img.src=u})}
+$('#msgs').addEventListener('click',e=>{const im=e.target.closest('[data-view]');if(im){$('#viewer img').src=im.src;$('#viewer').hidden=false;history.pushState({viewer:1},'');return}
+  const p=e.target.closest('[data-play]');if(p)return play(p);const r=e.target.closest('[data-rsvp]');if(r)return rsvp(r.dataset.rsvp,r.dataset.v)});
+$('#viewer').addEventListener('click',()=>history.back());
+/* voice notes */
+let REC=null,RECORDING=false,recT0=0,recTick=null,chunks=[];
+$('#mic').onclick=async()=>{if(!navigator.mediaDevices||!window.MediaRecorder){toast('متصفحك ما يدعم التسجيل الصوتي');return}
+  try{const st=await navigator.mediaDevices.getUserMedia({audio:true});chunks=[];REC=new MediaRecorder(st);REC.ondataavailable=e=>e.data.size&&chunks.push(e.data);REC.start();
+    RECORDING=true;recT0=NOW();$('#box').hidden=true;$('#rec').hidden=false;grow();$('#send').setAttribute('aria-label','أرسل التسجيل');
+    recTick=setInterval(()=>$('#rec-t').textContent=dur((NOW()-recT0)/1000),250)}
+  catch(x){toast('التسجيل يحتاج إذن المايكروفون')}};
+$('#rec-x').onclick=()=>stopRec(true);
+function stopRec(cancel){if(!RECORDING)return Promise.resolve(null);RECORDING=false;clearInterval(recTick);$('#rec').hidden=true;$('#box').hidden=false;$('#rec-t').textContent=dur(0);$('#send').setAttribute('aria-label','أرسل');
+  return new Promise(res=>{REC.onstop=()=>{REC.stream.getTracks().forEach(t=>t.stop());res(cancel?null:new Blob(chunks,{type:REC.mimeType||'audio/webm'}))};REC.stop();grow()})}
+async function finishRec(){const secs=(NOW()-recT0)/1000,b=await stopRec(false);if(!b||secs<.6){toast('التسجيل قصير، اضغط واتكلم ثم أرسل');return}
+  const url=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(b)});send({audio:url,dur:secs})}
+let PLAYING=null;
+function play(btn){const id=btn.dataset.play,c=chatOf(OPEN),m=c&&c.msgs.find(x=>x.id===id);if(!m)return;
+  if(PLAYING&&PLAYING.id===id){PLAYING.a.pause();return}
+  if(PLAYING)PLAYING.a.pause();const src=m.audio||MEDIA[m.id];if(!src){toast(m.from==='me'?'الصوت انحذف من التجربة':'هذي رسالة صوتية للعرض فقط');return}
+  const a=new Audio(src),bars=[...btn.parentNode.querySelectorAll('.wave i')];PLAYING={id,a};btn.innerHTML=ic('pause');btn.setAttribute('aria-label','إيقاف');
+  a.ontimeupdate=()=>{const k=a.duration&&isFinite(a.duration)?a.currentTime/a.duration:a.currentTime/(m.dur||1);bars.forEach((b,i)=>b.classList.toggle('on',i/bars.length<k))};
+  a.onpause=a.onended=()=>{btn.innerHTML=ic('play');btn.setAttribute('aria-label','شغّل الرسالة الصوتية');bars.forEach(b=>b.classList.remove('on'));if(PLAYING&&PLAYING.id===id)PLAYING=null};
+  a.play().catch(()=>toast('ما قدرنا نشغّل الصوت'))}
+/* reply and copy: press and hold a message (or right-click on a computer) */
+let holdT=null,ACT=null;
+$('#msgs').addEventListener('contextmenu',e=>{const m=e.target.closest('.m');if(!m)return;e.preventDefault();showActions(m)});
+$('#msgs').addEventListener('pointerdown',e=>{const m=e.target.closest('.m');if(!m||e.target.closest('button,img'))return;holdT=setTimeout(()=>showActions(m),480)});
+['pointerup','pointercancel','pointerleave'].forEach(t=>$('#msgs').addEventListener(t,()=>clearTimeout(holdT)));
+$('#msgs').addEventListener('scroll',()=>{clearTimeout(holdT);hideActions()},{passive:true});
+function showActions(el){hideActions();const c=chatOf(OPEN),m=c.msgs.find(x=>x.id===el.dataset.mid);if(!m)return;if(navigator.vibrate)navigator.vibrate(8);
+  const box=document.createElement('div');box.className='actions';box.innerHTML=`<button type="button" data-a="reply">${ic('reply')}رد</button>${m.text?`<button type="button" data-a="copy">${ic('copy')}نسخ</button>`:''}`;
+  $('#chat').appendChild(box);const r=el.getBoundingClientRect(),cr=$('#chat').getBoundingClientRect();box.style.top=Math.max(64,r.top-cr.top-48)+'px';
+  if(el.classList.contains('me'))box.style.left=(r.left-cr.left)+'px';else box.style.right=(cr.right-r.right)+'px';ACT=box;
+  box.onclick=async e=>{const a=e.target.closest('[data-a]');if(!a)return;
+    if(a.dataset.a==='reply'){REPLY={id:m.id,from:m.from,text:m.text||(m.img?'صورة':m.event?'عزيمة':'رسالة صوتية')};$('#reply-who').textContent=m.from==='me'?'أنت':nameOf(m.from);$('#reply-text').textContent=REPLY.text;$('#replybar').hidden=false;ta.focus()}
+    else{try{await navigator.clipboard.writeText(m.text);toast('انسخت الرسالة')}catch(x){toast('ما قدرنا ننسخ')}}hideActions()}}
+function hideActions(){if(ACT){ACT.remove();ACT=null}}
+document.addEventListener('pointerdown',e=>{if(ACT&&!e.target.closest('.actions'))hideActions()});
+$('#reply-x').onclick=()=>{REPLY=null;$('#replybar').hidden=true};
+
+/* ---------- simulated replies: the other side answers after a moment, so the tester sees typing, ticks and notifications ---------- */
+const TYPING={},ONLINE={};
+const POOL=['أبشر','الله يحييك','تمام، وصلت','إن شاء الله','حياك الله','الله يعطيك العافية'];
+let poolI=0,famI=0;
+function replyLater(c,m){
+  let who,text;
+  if(c.type==='dm'){who=c.with;text=/السلام/.test(m.text||'')?'وعليكم السلام ورحمة الله، هلا والله':m.img?'الله يعطيك العافية، وصلت الصورة':m.audio?'وصلني الصوت، أبشر':POOL[poolI++%POOL.length]}
+  else{const rot=c.members.filter(x=>x!=='adm');who=rot[famI++%rot.length];text=famI===1?'حياك الله يا '+first(ME?.name)+'، نورت':POOL[poolI++%POOL.length]}
+  if(m.reply&&m.reply.from!=='me'&&m.reply.from!=='sys'&&c.type==='group')who=m.reply.from;
+  setTimeout(()=>{TYPING[c.id]=nameOf(who);ONLINE[who]=true;refresh(c)},2300);
+  setTimeout(()=>{delete TYPING[c.id];incoming(c,{id:uid(),from:who,t:NOW(),text})},4600)}
+function refresh(c){if(OPEN===c.id){drawMsgs();$('#chat-sub').textContent=subOf(c)}else drawChats()}
+function incoming(c,m){c.msgs.push(m);const here=OPEN===c.id&&!document.hidden;if(!here)c.unread=(c.unread||0)+1;save();
+  if(OPEN===c.id){drawMsgs();$('#chat-sub').textContent=subOf(c)}drawChats();
+  if(!here)notify({title:c.type==='group'?titleOf(c):nameOf(m.from),body:(c.type==='group'?nameOf(m.from)+': ':'')+preview({type:'dm'},m),chat:c.id,kind:'msg',from:m.from})}
+/* one reminder arrives by itself a little after the tester first opens the app */
+function scheduleDemo(){if(S.demo.reminder)return;setTimeout(()=>{if(S.demo.reminder)return;S.demo.reminder=true;const c=chatOf('fam');
+  incoming(c,{id:uid(),from:'sal',t:NOW(),text:'تذكير: عشاء العائلة يوم '+fDay.format(new Date(evOf('e1').date+'T20:00'))+' الساعة ٨ مساءً، الله يحيي الجميع'})},20000)}
+
+/* ---------- notifications: a banner inside the app, and a real phone notification when allowed ---------- */
+let SW=null;
+if('serviceWorker' in navigator&&location.protocol!=='file:'){navigator.serviceWorker.register('sw.js').then(r=>{SW=r}).catch(()=>{});
+  navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.open)openFromNote(e.data.open)})}
+const canNotify=()=>'Notification' in window&&Notification.permission==='granted';
+async function askNotif(){if(!('Notification' in window)){drawMe();return false}
+  try{const p=await Notification.requestPermission();drawMe();if(p==='granted'){toast('تم تفعيل الإشعارات');return true}toast('الإشعارات ما تفعّلت. تقدر تغيرها من إعدادات الجوال');return false}catch(e){return false}}
+async function systemNote(n){if(!canNotify())return false;try{const reg=SW||await navigator.serviceWorker.ready;
+  await reg.showNotification(n.title,{body:n.body,icon:'icons/icon-192.png',badge:'icons/badge-96.png',tag:n.chat||n.kind,renotify:true,lang:'ar',dir:'rtl',data:{open:n.chat?'chat:'+n.chat:'alerts'}});return true}catch(e){return false}}
+let bannerT=null;
+async function notify(n,opts={}){
+  S.alerts.unshift({id:uid(),t:NOW(),title:n.title,body:n.body,chat:n.chat||null,ev:n.ev||null,from:n.from||null,seen:TAB==='alerts'&&SCREEN==='main'&&!OPEN});S.alerts=S.alerts.slice(0,40);save();drawDots();if(TAB==='alerts')drawAlerts();
+  if(document.hidden&&await systemNote(n))return;
+  const b=$('#banner');b.innerHTML=`<button type="button" class="card"><span class="appic" aria-hidden="true">س</span><span class="app">آل سلوم</span><time>الآن</time><b>${esc(n.title)}</b><span class="body">${esc(n.body)}</span></button>${opts.cap?`<span class="cap">${esc(opts.cap)}</span>`:''}`;
+  b.classList.add('show');if(navigator.vibrate)navigator.vibrate([20,40,20]);clearTimeout(bannerT);bannerT=setTimeout(()=>b.classList.remove('show'),opts.cap?6000:4500);
+  b.querySelector('.card').onclick=()=>{b.classList.remove('show');openFromNote(n.chat?'chat:'+n.chat:n.ev?'events':'alerts')}}
+function openFromNote(where){if(SCREEN!=='main')return;let sheet=false;$$('.sheet').forEach(s=>{if(!s.hidden){s.hidden=true;sheet=true}});
+  if(!$('#viewer').hidden){$('#viewer').hidden=true;sheet=true}
+  if(where.startsWith('chat:')){const id=where.slice(5);if(OPEN!==id){setTab('chats');openChat(id,sheet)}}
+  else{if(OPEN)closeChat();else if(sheet)history.back();setTab(where)}}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&OPEN){const c=chatOf(OPEN);if(c&&c.unread){c.unread=0;save();drawChats()}}});
+
+/* ---------- events ---------- */
+function drawEvents(){const L=[...S.events].sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+  $('#ev-list').innerHTML=L.map(ev=>{const d=new Date(ev.date+'T'+ev.time),n=ev.going.length+(ev.my==='yes'?1:0);
+    return`<article class="ev"><div class="date" aria-hidden="true"><b>${AR(d.getDate())}</b><span>${esc(new Intl.DateTimeFormat('ar-SA-u-ca-gregory',{month:'long'}).format(d))}</span></div>
+      <h3>${esc(ev.title)}${ev.sample?'<span class="tag">مثال</span>':''}</h3>
+      <div class="info"><span>${esc(fDate.format(d))}، الساعة ${esc(fTime.format(d))}</span><span>${esc(ev.place)}</span><span>الداعي: ${esc(nameOf(ev.host))}</span></div>
+      <div class="row"><button class="btn sm" type="button" data-rsvp="${ev.id}" data-v="yes" aria-pressed="${ev.my==='yes'}">سأحضر</button><button class="btn sm" type="button" data-rsvp="${ev.id}" data-v="no" aria-pressed="${ev.my==='no'}">أعتذر</button></div>
+      <p class="who">${n?AR(n)+' أكدوا الحضور':'ما أحد أكد حضوره للحين'}${ev.my==='yes'?'، وأنت منهم':''}</p></article>`}).join('')}
+$('#ev-list').addEventListener('click',e=>{const r=e.target.closest('[data-rsvp]');if(r)rsvp(r.dataset.rsvp,r.dataset.v)});
+function rsvp(id,v){const ev=evOf(id);if(!ev)return;ev.my=ev.my===v?null:v;save();
+  toast(ev.my==='yes'?'أكدت حضورك، ووصل الخبر للداعي':ev.my==='no'?'وصل اعتذارك للداعي':'ألغيت ردك');
+  if(OPEN)drawMsgs();drawEvents()}
+$('#add-ev').onclick=()=>{$('#f-ev').reset();$('#ev-time').value='20:00';const d=new Date();d.setDate(d.getDate()+7);$('#ev-date').value=d.toISOString().slice(0,10);$('#ev-err').textContent='';openSheet($('#sh-ev'))};
+$('#f-ev').addEventListener('submit',e=>{e.preventDefault();const t=$('#ev-title').value.trim(),d=$('#ev-date').value,tm=$('#ev-time').value,p=$('#ev-place').value.trim();
+  if(!t||!d||!tm||!p){$('#ev-err').textContent='اكتب اسم المناسبة والتاريخ والوقت والمكان';return}
+  const ev={id:'e'+uid(),title:t,date:d,time:tm,place:p,host:'me',going:[],sample:false,my:'yes'};S.events.push(ev);
+  const fam=chatOf('fam');fam.msgs.push({id:uid(),from:'me',t:NOW(),event:ev.id,st:'sent'});save();progress(fam,fam.msgs[fam.msgs.length-1]);
+  closeSheet($('#sh-ev'));drawEvents();drawChats();
+  setTimeout(()=>notify({title:'عزيمة جديدة: '+t,body:fDate.format(new Date(d+'T'+tm))+' · '+fTime.format(new Date(d+'T'+tm))+' · '+p,ev:ev.id,kind:'event'},{cap:'هذا التنبيه اللي يوصل لكل أفراد العائلة'}),500);
+  setTimeout(()=>{const who=['moh','kha','abd'][Math.floor(Math.random()*3)];incoming(fam,{id:uid(),from:who,t:NOW(),text:'حاضرين إن شاء الله، الله يحييك'})},5200)});
+
+/* ---------- alerts ---------- */
+function drawAlerts(){const L=S.alerts;$('#alert-none').hidden=L.length>0;
+  $('#alert-list').innerHTML=L.map(a=>`<button type="button" class="arow${a.seen?'':' new'}" data-open="${a.chat?'chat:'+a.chat:a.ev?'events':'alerts'}">
+    <span class="av${a.ev?' ink':''}" aria-hidden="true">${a.ev?ic('cal'):esc(initial(a.from?nameOf(a.from):a.title))}</span>
+    <span class="t"><b>${esc(a.title)}</b><span>${esc(a.body)}</span><time>${when(a.t)}</time></span></button>`).join('')}
+$('#alert-list').addEventListener('click',e=>{const b=e.target.closest('[data-open]');if(b)openFromNote(b.dataset.open)});
+
+/* ---------- me ---------- */
+function drawMe(){if(!ME)return;$('#me-av').textContent=initial(ME.name);$('#me-name').textContent=ME.name||'';
+  $('#me-phone').textContent=ME.phone?'+966 '+ME.phone.replace(/(\d{2})(\d{3})(\d{4})/,'$1 $2 $3'):'';
+  const st=$('#me-notif-state'),sub=$('#me-notif-sub');
+  if(!('Notification' in window)){st.textContent='غير متاحة';st.className='state';sub.textContent=isIOS&&!standalone()?'ثبّت التطبيق على الشاشة الرئيسية أول':'متصفحك ما يدعمها'}
+  else if(Notification.permission==='granted'){st.textContent='مفعّلة';st.className='state on';sub.textContent='توصلك الرسائل والعزايم على شاشة الجوال'}
+  else if(Notification.permission==='denied'){st.textContent='مقفلة';st.className='state';sub.textContent='افتحها من إعدادات الجوال للمتصفح'}
+  else{st.textContent='فعّلها';st.className='state';sub.textContent='اضغط عشان تفعّلها'}
+  $('#me-install').hidden=standalone();
+  const fb=$('#feedback');fb.closest('.group').hidden=!FEEDBACK_URL;if(FEEDBACK_URL)fb.href=FEEDBACK_URL;
+  const fs=document.documentElement.dataset.fs||'0';$$('[data-fs]').forEach(b=>{if(b.tagName==='BUTTON')b.setAttribute('aria-pressed',String(b.dataset.fs===fs))});
+  const th=document.documentElement.dataset.theme||'';$$('[data-th]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.th===th)))}
+$('#me-notif').onclick=async()=>{if(!('Notification' in window)){if(isIOS&&!standalone())showInstall();else toast('متصفحك ما يدعم إشعارات الجوال');return}
+  if(Notification.permission==='default')await askNotif();else if(Notification.permission==='denied')toast('افتح الإعدادات ← المتصفح ← الإشعارات، واسمح لهذا الموقع');else toast('الإشعارات مفعّلة')};
+$('#me-test').onclick=async()=>{if(('Notification' in window)&&Notification.permission==='default')await askNotif();
+  const n={title:'مجموعة العائلة',body:'سلمان: هذا إشعار تجربة، لو شفته على شاشة جوالك فالإشعارات شغالة',chat:'fam',kind:'msg',from:'sal'};
+  toast(canNotify()?'انتظر ٥ ثواني، تقدر تطلع من التطبيق أو تقفل الشاشة':'بيظهر داخل التطبيق بعد ٥ ثواني');
+  setTimeout(async()=>{if(canNotify()&&await systemNote(n)){S.alerts.unshift({id:uid(),t:NOW(),title:n.title,body:n.body,chat:'fam',from:'sal',seen:false});save();drawDots();return}notify(n)},5000)};
+$$('.seg [data-fs]').forEach(b=>b.onclick=()=>{const v=b.dataset.fs;if(v==='0')delete document.documentElement.dataset.fs;else document.documentElement.dataset.fs=v;ls.set(STORE+':fs',v);drawMe()});
+$$('.seg [data-th]').forEach(b=>b.onclick=()=>{const v=b.dataset.th;if(v)document.documentElement.dataset.theme=v;else delete document.documentElement.dataset.theme;ls.set(STORE+':th',v);drawMe()});
+let DEFER=null;addEventListener('beforeinstallprompt',e=>{e.preventDefault();DEFER=e});
+function showInstall(){const b=$('#in-body');
+  if(DEFER){b.innerHTML='<p class="muted">يفتح التطبيق من الشاشة الرئيسية مثل أي تطبيق، وتوصلك إشعاراته.</p><button class="btn wide" type="button" id="in-go">ثبّت الحين</button>'}
+  else if(isIOS)b.innerHTML=`<ol class="steps"><li>افتح الرابط في <b>Safari</b>.</li><li>اضغط زر المشاركة ${ic('share')} أسفل الشاشة.</li><li>اختر <b>«إضافة إلى الشاشة الرئيسية»</b> ثم <b>«إضافة»</b>.</li><li>افتح التطبيق من أيقونته، ومن «حسابي» فعّل الإشعارات.</li></ol><p class="note">الإشعارات في الآيفون تحتاج نظام iOS 16.4 أو أحدث.</p>`;
+  else b.innerHTML=`<ol class="steps"><li>افتح قائمة المتصفح (النقاط الثلاث أعلى الشاشة).</li><li>اختر <b>«تثبيت التطبيق»</b> أو <b>«إضافة إلى الشاشة الرئيسية»</b>.</li><li>افتح التطبيق من أيقونته.</li></ol>`;
+  openSheet($('#sh-install'));const g=$('#in-go');if(g)g.onclick=async()=>{DEFER.prompt();const r=await DEFER.userChoice;DEFER=null;closeSheet($('#sh-install'));if(r.outcome==='accepted')toast('تم التثبيت')}}
+$('#me-install').onclick=showInstall;
+$('#me-reset').onclick=()=>{const b=$('#me-reset');if(!b.dataset.sure){b.dataset.sure='1';b.querySelector('b').textContent='متأكد؟ اضغط مرة ثانية';setTimeout(()=>{delete b.dataset.sure;b.querySelector('b').textContent='ابدأ التجربة من جديد'},4000);return}
+  ls.del(STORE+':data');ls.del(STORE+':me');ls.del(STORE+':fs');ls.del(STORE+':th');location.replace(location.pathname)};
+
+/* ---------- start-up ---------- */
+{const fs=ls.get(STORE+':fs');if(fs&&fs!=='0')document.documentElement.dataset.fs=fs;const th=ls.get(STORE+':th');if(th)document.documentElement.dataset.theme=th}
+if(ME&&ME.done){history.replaceState({s:'main'},'');show('main');setTab('chats');scheduleDemo();
+  const h=location.hash.slice(1);if(h.startsWith('chat-'))openChat(h.slice(5))}
+else{history.replaceState({s:'welcome'},'');show('welcome')}
+</script>
+</body>
+</html>
